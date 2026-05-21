@@ -1,30 +1,39 @@
 package compiler;
 
+import compiler.ast.stmt.ProgramNode;
 import compiler.lexer.Lexer;
 import compiler.lexer.Token;
 import compiler.lexer.TokenType;
+import compiler.parser.AstPrinter;
+import compiler.parser.ParseException;
+import compiler.parser.Parser;
 
 import java.util.List;
 
 /**
- * Ponto de entrada da aplicação — usado para testar o compilador por etapas.
+ * Ponto de entrada do compilador — executa as etapas 1 e 2 em sequência.
  *
- * A cada nova fase do compilador (parser, semântico, geração de código),
- * adicionaremos chamadas aqui para validar a integração entre os módulos.
- *
- * Por enquanto,Etapa 1.
+ * Para cada caso de teste, exibe:
+ *   1. O código-fonte original
+ *   2. Os tokens produzidos pelo Lexer  (Etapa 1)
+ *   3. A AST produzida pelo Parser      (Etapa 2)
  */
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("=== Compilador — Teste da Etapa 1: Análise Léxica ===\n");
+        System.out.println("╔══════════════════════════════════════════╗");
+        System.out.println("║   Compilador — Etapas 1 e 2 completas    ║");
+        System.out.println("╚══════════════════════════════════════════╝\n");
 
-        // Rodamos uma bateria de casos de teste em sequência
         testCase("Declaração e atribuição simples",
             "int x = 42;"
         );
 
-        testCase("Estrutura if-else completa",
+        testCase("Expressão aritmética — teste de precedência",
+            "int resultado = 2 + 3 * 4;"
+        );
+
+        testCase("If-else completo",
             """
             int idade = 18;
             if (idade >= 18) {
@@ -35,7 +44,7 @@ public class Main {
             """
         );
 
-        testCase("Laço while com operações aritméticas",
+        testCase("Laço while com múltiplas instruções",
             """
             int soma = 0;
             int i = 1;
@@ -50,29 +59,18 @@ public class Main {
         testCase("Operadores lógicos e booleanos",
             """
             bool ativo = true;
-            bool admin  = false;
+            bool admin = false;
             if (ativo && !admin) {
-                print("usuário comum ativo");
+                print("usuário comum");
             }
             """
         );
 
-        testCase("Comentários de linha e bloco (devem ser ignorados)",
-            """
-            // Este comentário deve desaparecer
-            int x = 10; // comentário no fim da linha
-            /* Este também
-               é um comentário
-               de múltiplas linhas */
-            int y = 20;
-            """
+        testCase("Parênteses invertendo precedência",
+            "int x = (2 + 3) * (10 - 4);"
         );
 
-        testCase("Operadores relacionais e de igualdade",
-            "bool ok = (x == 5) || (y != 3) && (z > 0);"
-        );
-
-        testCase("Entrada de dados com read",
+        testCase("Read e print",
             """
             int n;
             read(n);
@@ -80,16 +78,16 @@ public class Main {
             """
         );
 
-        testCase("Erros léxicos — caracteres inválidos",
-            """
-            int x = 10;
-            int y = x @ 2;
-            int z = x # y;
-            """
+        testCase("Erro léxico — caractere inválido",
+            "int x = 10 @ 2;"
         );
 
-        testCase("String não terminada — erro léxico",
-            "print(\"olá mundo);"
+        testCase("Erro sintático — falta o ';'",
+            "int x = 10"
+        );
+
+        testCase("Erro sintático — falta o ')' no if",
+            "if (x > 0 { print(x); }"
         );
     }
 
@@ -98,41 +96,22 @@ public class Main {
     // -------------------------------------------------------------------------
 
     /**
-     * Executa o lexer sobre o código fornecido e exibe o resultado formatado.
-     *
-     * Mostra os tokens gerados e, se houver erros léxicos, os lista separadamente
-     * ao final — simulando o comportamento de um compilador real que coleta
-     * todos os erros antes de abortar.
-     *
-     * @param description título amigável do caso de teste
-     * @param sourceCode  código-fonte a ser analisado
+     * Executa as duas etapas sobre o código-fonte e exibe os resultados.
+     * Se a Etapa 1 encontrar erros, a Etapa 2 não é executada.
      */
     private static void testCase(String description, String sourceCode) {
-        // Cabeçalho do caso de teste
-        System.out.println("┌─────────────────────────────────────────");
-        System.out.println("│ TESTE: " + description);
-        System.out.println("├─────────────────────────────────────────");
+        printHeader(description, sourceCode);
 
-        // Exibe o código-fonte com numeração de linhas
-        System.out.println("│ Código-fonte:");
-        String[] lines = sourceCode.split("\n");
-        for (int i = 0; i < lines.length; i++) {
-            System.out.printf("│  %2d │ %s%n", i + 1, lines[i]);
-        }
-        System.out.println("├─────────────────────────────────────────");
+        // ── Etapa 1: Análise Léxica ──────────────────────────────────────────
+        System.out.println("│ 📌 ETAPA 1 — Tokens:");
 
-        // Executa o lexer
         Lexer lexer = new Lexer(sourceCode);
         List<Token> tokens = lexer.tokenize();
 
-        // Exibe os tokens produzidos (exceto EOF para não poluir a saída)
-        System.out.println("│ Tokens produzidos:");
         for (Token token : tokens) {
             if (token.isType(TokenType.EOF)) continue;
-
-            // Tokens com erro são destacados visualmente
             String marker = token.isType(TokenType.UNKNOWN) ? " ⚠" : "";
-            System.out.printf("│   %-20s  %-15s  linha %-3d col %d%s%n",
+            System.out.printf("│   %-20s  %-15s  linha %-2d col %d%s%n",
                 token.getType(),
                 "\"" + token.getLexeme() + "\"",
                 token.getLine(),
@@ -141,18 +120,57 @@ public class Main {
             );
         }
 
-        // Exibe erros léxicos, se houver
         if (lexer.hasErrors()) {
-            System.out.println("├─────────────────────────────────────────");
-            System.out.println("│ ⚠  Erros léxicos encontrados:");
-            for (String error : lexer.getErrors()) {
-                System.out.println("│   → " + error);
-            }
-        } else {
-            System.out.println("│ ✓  Nenhum erro léxico encontrado.");
+            System.out.println("│");
+            System.out.println("│ ⚠  Erros léxicos — Etapa 2 não executada:");
+            lexer.getErrors().forEach(e -> System.out.println("│   → " + e));
+            printFooter();
+            return;
         }
 
-        System.out.println("└─────────────────────────────────────────");
-        System.out.println();
+        System.out.println("│ ✓  Sem erros léxicos.");
+
+        // ── Etapa 2: Análise Sintática ───────────────────────────────────────
+        System.out.println("│");
+        System.out.println("│ 📌 ETAPA 2 — AST:");
+
+        try {
+            Parser parser = new Parser(tokens);
+            ProgramNode ast = parser.parse();
+            System.out.println("│ ✓  AST gerada com sucesso:");
+            System.out.println("│");
+
+            // Imprime cada linha da AST prefixada com "│   "
+            AstPrinter printer = new AstPrinter();
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            java.io.PrintStream old = System.out;
+            System.setOut(new java.io.PrintStream(baos));
+            printer.print(ast);
+            System.setOut(old);
+            for (String line : baos.toString().split("\n")) {
+                System.out.println("│   " + line);
+            }
+
+        } catch (ParseException e) {
+            System.out.println("│ ✗  " + e.getMessage());
+        }
+
+        printFooter();
+    }
+
+    private static void printHeader(String description, String sourceCode) {
+        System.out.println("┌─────────────────────────────────────────");
+        System.out.println("│ TESTE: " + description);
+        System.out.println("├─────────────────────────────────────────");
+        String[] lines = sourceCode.split("\n");
+        for (int i = 0; i < lines.length; i++) {
+            System.out.printf("│  %2d │ %s%n", i + 1, lines[i]);
+        }
+        System.out.println("├─────────────────────────────────────────");
+    }
+
+    private static void printFooter() {
+        System.out.println("└─────────────────────────────────────────\n");
     }
 }
+
