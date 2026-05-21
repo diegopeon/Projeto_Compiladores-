@@ -19,7 +19,8 @@ Projeto acadêmico de construção de um **compilador completo**, desenvolvido e
 
 ## Sobre o Projeto
 
-Este compilador foi desenvolvido como trabalho da disciplina de **Teoria de Linguagens Formais e Autômatos**. O objetivo é consolidar os conceitos teóricos — autômatos finitos, gramáticas livres de contexto, tabelas de símbolos e geração de código — por meio de uma implementação prática e funcional.
+Este compilador foi desenvolvido como trabalho da disciplina de **Teoria de Linguagens Formais e Autômatos**. O objetivo é consolidar os conceitos teóricos:  autômatos finitos, gramáticas livres de contexto, tabelas de símbolos e geração de código.
+Por meio de uma implementação prática e funcional.
 
 O desenvolvimento é **metódico e incremental**: cada fase é implementada, testada e documentada antes de avançar para a próxima.
 
