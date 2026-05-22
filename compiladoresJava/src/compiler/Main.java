@@ -7,44 +7,49 @@ import compiler.lexer.TokenType;
 import compiler.parser.AstPrinter;
 import compiler.parser.ParseException;
 import compiler.parser.Parser;
+import compiler.semantic.SemanticAnalyzer;
+import compiler.semantic.SemanticException;
 
 import java.util.List;
 
 /**
- * Ponto de entrada do compilador — executa as etapas 1 e 2 em sequência.
+ * Ponto de entrada — executa as 3 etapas do compilador em sequência.
  *
- * Para cada caso de teste, exibe:
- *   1. O código-fonte original
- *   2. Os tokens produzidos pelo Lexer  (Etapa 1)
- *   3. A AST produzida pelo Parser      (Etapa 2)
+ * Etapa 1: Análise Léxica    (Lexer  → tokens)
+ * Etapa 2: Análise Sintática (Parser → AST)
+ * Etapa 3: Análise Semântica (SemanticAnalyzer → validação de tipos e escopos)
  */
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║   Compilador — Etapas 1 e 2 completas    ║");
-        System.out.println("╚══════════════════════════════════════════╝\n");
+        System.out.println("╔══════════════════════════════════════════════╗");
+        System.out.println("║   Compilador — Etapas 1, 2 e 3 completas     ║");
+        System.out.println("╚══════════════════════════════════════════════╝\n");
 
-        testCase("Declaração e atribuição simples",
-            "int x = 42;"
+        // ── Casos válidos ────────────────────────────────────────────────────
+
+        testCase("Declaração e uso correto de variáveis",
+            """
+            int x = 10;
+            int y = 20;
+            int soma = x + y;
+            print(soma);
+            """
         );
 
-        testCase("Expressão aritmética — teste de precedência",
-            "int resultado = 2 + 3 * 4;"
-        );
-
-        testCase("If-else completo",
+        testCase("If-else com condição booleana",
             """
             int idade = 18;
-            if (idade >= 18) {
-                print("maior de idade");
+            bool maior = idade >= 18;
+            if (maior) {
+                print("adulto");
             } else {
-                print("menor de idade");
+                print("menor");
             }
             """
         );
 
-        testCase("Laço while com múltiplas instruções",
+        testCase("Laço while corretamente tipado",
             """
             int soma = 0;
             int i = 1;
@@ -56,18 +61,24 @@ public class Main {
             """
         );
 
-        testCase("Operadores lógicos e booleanos",
+        testCase("Escopo aninhado — variável local ao bloco",
             """
-            bool ativo = true;
-            bool admin = false;
-            if (ativo && !admin) {
-                print("usuário comum");
+            int x = 5;
+            if (x > 0) {
+                int y = x + 1;
+                print(y);
             }
+            print(x);
             """
         );
 
-        testCase("Parênteses invertendo precedência",
-            "int x = (2 + 3) * (10 - 4);"
+        testCase("Operadores lógicos encadeados",
+            """
+            bool a = true;
+            bool b = false;
+            bool resultado = a && !b;
+            print(resultado);
+            """
         );
 
         testCase("Read e print",
@@ -78,16 +89,59 @@ public class Main {
             """
         );
 
-        testCase("Erro léxico — caractere inválido",
-            "int x = 10 @ 2;"
+        // ── Casos com erro semântico ─────────────────────────────────────────
+
+        testCase("ERRO — variável não declarada",
+            """
+            int x = 10;
+            print(y);
+            """
         );
 
-        testCase("Erro sintático — falta o ';'",
-            "int x = 10"
+        testCase("ERRO — variável declarada duas vezes no mesmo escopo",
+            """
+            int x = 1;
+            int x = 2;
+            """
         );
 
-        testCase("Erro sintático — falta o ')' no if",
-            "if (x > 0 { print(x); }"
+        testCase("ERRO — tipo incompatível na declaração",
+            """
+            int x = true;
+            """
+        );
+
+        testCase("ERRO — tipo incompatível na atribuição",
+            """
+            int x = 10;
+            x = false;
+            """
+        );
+
+        testCase("ERRO — operação aritmética com bool",
+            """
+            bool b = true;
+            int x = b + 1;
+            """
+        );
+
+        testCase("ERRO — condição do if não é bool",
+            """
+            int x = 10;
+            if (x) {
+                print("erro");
+            }
+            """
+        );
+
+        testCase("ERRO — uso de variável fora do escopo",
+            """
+            int x = 5;
+            if (x > 0) {
+                int y = 10;
+            }
+            print(y);
+            """
         );
     }
 
@@ -95,64 +149,59 @@ public class Main {
     // Infraestrutura de testes
     // -------------------------------------------------------------------------
 
-    /**
-     * Executa as duas etapas sobre o código-fonte e exibe os resultados.
-     * Se a Etapa 1 encontrar erros, a Etapa 2 não é executada.
-     */
     private static void testCase(String description, String sourceCode) {
         printHeader(description, sourceCode);
 
-        // ── Etapa 1: Análise Léxica ──────────────────────────────────────────
-        System.out.println("│ 📌 ETAPA 1 — Tokens:");
-
+        // ── Etapa 1 ──────────────────────────────────────────────────────────
+        System.out.println("│ 📌 ETAPA 1 — Léxico:");
         Lexer lexer = new Lexer(sourceCode);
         List<Token> tokens = lexer.tokenize();
 
-        for (Token token : tokens) {
-            if (token.isType(TokenType.EOF)) continue;
-            String marker = token.isType(TokenType.UNKNOWN) ? " ⚠" : "";
+        for (Token t : tokens) {
+            if (t.isType(TokenType.EOF)) continue;
+            String marker = t.isType(TokenType.UNKNOWN) ? " ⚠" : "";
             System.out.printf("│   %-20s  %-15s  linha %-2d col %d%s%n",
-                token.getType(),
-                "\"" + token.getLexeme() + "\"",
-                token.getLine(),
-                token.getColumn(),
-                marker
-            );
+                t.getType(), "\"" + t.getLexeme() + "\"",
+                t.getLine(), t.getColumn(), marker);
         }
 
         if (lexer.hasErrors()) {
-            System.out.println("│");
-            System.out.println("│ ⚠  Erros léxicos — Etapa 2 não executada:");
-            lexer.getErrors().forEach(e -> System.out.println("│   → " + e));
-            printFooter();
-            return;
+            lexer.getErrors().forEach(e -> System.out.println("│  ⚠ " + e));
+            printFooter(); return;
         }
+        System.out.println("│  ✓ Sem erros léxicos.");
 
-        System.out.println("│ ✓  Sem erros léxicos.");
-
-        // ── Etapa 2: Análise Sintática ───────────────────────────────────────
+        // ── Etapa 2 ──────────────────────────────────────────────────────────
         System.out.println("│");
         System.out.println("│ 📌 ETAPA 2 — AST:");
-
+        ProgramNode ast;
         try {
-            Parser parser = new Parser(tokens);
-            ProgramNode ast = parser.parse();
-            System.out.println("│ ✓  AST gerada com sucesso:");
-            System.out.println("│");
+            ast = new Parser(tokens).parse();
 
-            // Imprime cada linha da AST prefixada com "│   "
-            AstPrinter printer = new AstPrinter();
+            // Captura a saída do AstPrinter e prefixa cada linha com "│   "
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
             java.io.PrintStream old = System.out;
             System.setOut(new java.io.PrintStream(baos));
-            printer.print(ast);
+            new AstPrinter().print(ast);
             System.setOut(old);
             for (String line : baos.toString().split("\n")) {
                 System.out.println("│   " + line);
             }
+            System.out.println("│  ✓ AST válida.");
 
         } catch (ParseException e) {
-            System.out.println("│ ✗  " + e.getMessage());
+            System.out.println("│  ✗ " + e.getMessage());
+            printFooter(); return;
+        }
+
+        // ── Etapa 3 ──────────────────────────────────────────────────────────
+        System.out.println("│");
+        System.out.println("│ 📌 ETAPA 3 — Semântico:");
+        try {
+            new SemanticAnalyzer().analyze(ast);
+            System.out.println("│  ✓ Sem erros semânticos! Programa correto.");
+        } catch (SemanticException e) {
+            System.out.println("│  ✗ " + e.getMessage());
         }
 
         printFooter();
@@ -173,4 +222,3 @@ public class Main {
         System.out.println("└─────────────────────────────────────────\n");
     }
 }
-
