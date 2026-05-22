@@ -204,19 +204,54 @@ java -cp out compiler.Main
 ## Estrutura de Pastas
 
 ```
-compiler/
-├── src/
-│   └── compiler/
-│       ├── Main.java               ← Ponto de entrada e bateria de testes
-│       ├── lexer/
-│       │   ├── TokenType.java      ← Enum de tipos de token
-│       │   ├── Token.java          ← Representação de um token
-│       │   └── Lexer.java          ← Analisador léxico
-│       ├── parser/                 ← (Etapa 2 — em breve)
-│       ├── semantic/               ← (Etapa 3 — em breve)
-│       ├── ir/                     ← (Etapa 4 — em breve)
-│       └── codegen/                ← (Etapa 5 — em breve)
-└── out/                            ← Bytecode compilado (gerado pelo javac)
+compiler/src/compiler/
+│
+├── Main.java                        ← ponto de entrada e testes
+│
+├── lexer/                           ✅ ETAPA 1 — concluída
+│   ├── TokenType.java               · enum com todos os tipos de token
+│   ├── Token.java                   · value object (tipo + lexema + posição)
+│   └── Lexer.java                   · scanner / máquina de estados
+│
+├── ast/                             ✅ ETAPA 2 — concluída
+│   ├── Node.java                    · interface base de todos os nós
+│   ├── NodeVisitor.java             · Visitor Pattern (usado em todas as fases)
+│   │
+│   ├── stmt/                        · instruções (não retornam valor)
+│   │   ├── Stmt.java                · classe base abstrata
+│   │   ├── ProgramNode.java         · raiz da AST
+│   │   ├── BlockStmt.java           · bloco { ... }
+│   │   ├── VarDeclStmt.java         · int x = 42;
+│   │   ├── AssignStmt.java          · x = expr;
+│   │   ├── IfStmt.java              · if/else
+│   │   ├── WhileStmt.java           · while
+│   │   ├── PrintStmt.java           · print(expr);
+│   │   └── ReadStmt.java            · read(var);
+│   │
+│   └── expr/                        · expressões (retornam um valor)
+│       ├── Expr.java                · classe base abstrata
+│       ├── BinaryExpr.java          · left OP right
+│       ├── UnaryExpr.java           · ! expr  /  - expr
+│       ├── IdentifierExpr.java      · nome de variável
+│       ├── IntLiteralExpr.java      · 42
+│       ├── BoolLiteralExpr.java     · true / false
+│       └── StringLiteralExpr.java   · "texto"
+│
+├── parser/                          ✅ ETAPA 2 — concluída
+│   ├── Parser.java                  · parser descendente recursivo
+│   ├── AstPrinter.java              · visitor que imprime a AST
+│   └── ParseException.java          · erro sintático com posição
+│
+├── semantic/                        ⏳ ETAPA 3 — próxima
+│   ├── SemanticAnalyzer.java        · visitor que percorre a AST
+│   ├── SymbolTable.java             · controle de escopo e tipos
+│   └── SemanticException.java       · erro semântico
+│
+├── ir/                              ⏳ ETAPA 4
+│   └── IrGenerator.java             · gera código de 3 endereços (TAC)
+│
+└── codegen/                         ⏳ ETAPA 5
+    └── CodeGenerator.java           · traduz TAC para Assembly  
 ```
 
 ---
@@ -225,7 +260,7 @@ compiler/
 
 | Critério | Peso | Status |
 |---|---|---|
-| Corretude Léxica/Sintática | 30% | 🔄 Em progresso |
+| Corretude Léxica/Sintática | 30% | ✅ Em progresso |
 | Análise Semântica | 20% | ⏳ Pendente |
 | Geração de Código | 30% | ⏳ Pendente |
 | Documentação / Código | 20% | ✅ Aplicado desde o início |
