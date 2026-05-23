@@ -19,7 +19,7 @@ Projeto academico de construcao de um **compilador completo**, desenvolvido em J
 
 ## Sobre o Projeto
 
-Este compilador foi desenvolvido como trabalho da disciplina de **Teoria de Linguagens Formais e Automatos**. O objetivo e consolidar os conceitos teoricos — automatos finitos, gramaticas livres de contexto, tabelas de simbolos e geracao de codigo — por meio de uma implementacao pratica e funcional.
+Este compilador foi desenvolvido como trabalho da disciplina de **Teoria de Linguagens Formais e Automatos**. O objetivo e consolidar os conceitos teoricos, automatos finitos, gramaticas livres de contexto, tabelas de simbolos e geracao de codigo, por meio de uma implementacao pratica e funcional.
 
 O pipeline e composto por **5 etapas**, executadas em sequencia. O Main.java demonstra todas elas de forma visual e humanizada, exibindo para cada programa:
 
