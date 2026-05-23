@@ -1,229 +1,322 @@
-# 🛠️ Compilador Didático em Java
+# Compilador Didatico em Java
 
-Projeto acadêmico de construção de um **compilador completo**, desenvolvido em Java de forma incremental. Cada etapa corresponde a uma fase clássica da teoria de compiladores, com código comentado e boas práticas de design aplicadas em todo o projeto.
+Projeto academico de construcao de um **compilador completo**, desenvolvido em Java de forma incremental. Cada etapa corresponde a uma fase classica da teoria de compiladores, com codigo comentado e boas praticas de design aplicadas em todo o projeto.
 
 ---
 
-## 📋 Índice
+## Indice
 
 - [Sobre o Projeto](#sobre-o-projeto)
 - [Linguagem Suportada](#linguagem-suportada)
 - [Arquitetura](#arquitetura)
 - [Etapas do Compilador](#etapas-do-compilador)
 - [Como Executar](#como-executar)
-- [Exemplos de Código-Fonte](#exemplos-de-código-fonte)
+- [Exemplos](#exemplos)
 - [Estrutura de Pastas](#estrutura-de-pastas)
-- [Critérios de Avaliação](#critérios-de-avaliação)
+- [Criterios de Avaliacao](#criterios-de-avaliacao)
 
 ---
 
 ## Sobre o Projeto
 
-Este compilador foi desenvolvido como trabalho da disciplina de **Teoria de Linguagens Formais e Autômatos**. O objetivo é consolidar os conceitos teóricos: autômatos finitos, gramáticas livres de contexto, tabelas de símbolos e geração de código, por meio de uma implementação prática e funcional.
+Este compilador foi desenvolvido como trabalho da disciplina de **Teoria de Linguagens Formais e Automatos**. O objetivo e consolidar os conceitos teoricos — automatos finitos, gramaticas livres de contexto, tabelas de simbolos e geracao de codigo — por meio de uma implementacao pratica e funcional.
 
-O desenvolvimento é **metódico e incremental**: cada fase é implementada, testada e documentada antes de avançar para a próxima.
+O pipeline e composto por **5 etapas**, executadas em sequencia. O Main.java demonstra todas elas de forma visual e humanizada, exibindo para cada programa:
+
+```
+[1] Codigo-fonte original
+[2] Tokens gerados        (Etapa 1 - Lexico)
+[3] AST construida        (Etapa 2 - Sintatico)
+[4] Validacao semantica   (Etapa 3 - Semantico)
+[5] Codigo TAC gerado     (Etapa 4 - IR)
+[6] Assembly x86-64       (Etapa 5a - Codegen)
+[7] Execucao na VM        (Etapa 5b - Maquina Virtual)
+```
 
 ---
 
 ## Linguagem Suportada
 
-A linguagem-alvo é uma linguagem imperativa simples, criada para fins didáticos:
+A linguagem-alvo e uma linguagem imperativa simples, criada para fins didaticos:
 
 | Recurso | Exemplos |
 |---|---|
-| **Tipos de dados** | `int`, `bool`, `string` |
-| **Controle de fluxo** | `if`, `else`, `while` |
-| **Operadores aritméticos** | `+`, `-`, `*`, `/` |
-| **Operadores relacionais** | `==`, `!=`, `<`, `>`, `<=`, `>=` |
-| **Operadores lógicos** | `&&`, `\|\|`, `!` |
-| **Entrada/Saída** | `print(...)`, `read(...)` |
-| **Comentários** | `// linha` e `/* bloco */` |
+| Tipos de dados | `int`, `bool`, `string` |
+| Controle de fluxo | `if`, `else`, `while` |
+| Operadores aritmeticos | `+`, `-`, `*`, `/` |
+| Operadores relacionais | `==`, `!=`, `<`, `>`, `<=`, `>=` |
+| Operadores logicos | `&&`, `||`, `!` |
+| Entrada/Saida | `print(...)`, `read(...)` |
+| Comentarios | `// linha` e `/* bloco */` |
 
-### Exemplo de programa válido
+### Exemplo de programa valido
 
 ```
 int soma = 0;
 int i = 1;
-
 while (i <= 10) {
     soma = soma + i;
     i = i + 1;
 }
-
-print(soma); // Saída: 55
+print(soma); // Saida: 55
 ```
 
 ---
 
 ## Arquitetura
 
-O compilador segue o **pipeline clássico de tradução**:
-
 ```
-Código-Fonte
-     │
-     ▼
-┌─────────────┐
-│  Analisador │  Etapa 1 — Léxico       ✅ Concluída
-│    Léxico   │  → Lista de Tokens
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│  Analisador │  Etapa 2 — Sintático    ✅ Concluída
-│  Sintático  │  → AST (Árvore de Sintaxe Abstrata)
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│  Analisador │  Etapa 3 — Semântico    ✅ Concluída
-│  Semântico  │  → Tabela de Símbolos + Verificação de Tipos
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│  Gerador de │  Etapa 4 — Código IR    ⏳ Em breve
-│  Código IR  │  → TAC (Three-Address Code)
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│  Gerador de │  Etapa 5 — Código Final ⏳ Em breve
-│ Código Final│  → Assembly / Bytecode
-└─────────────┘
+Codigo-Fonte
+     |
+     v
++-------------------+
+|  Etapa 1 - Lexico |  Tokens
++-------------------+
+     |
+     v
++----------------------+
+|  Etapa 2 - Sintatico |  AST (Arvore de Sintaxe Abstrata)
++----------------------+
+     |
+     v
++-----------------------+
+|  Etapa 3 - Semantico  |  Tabela de Simbolos + Verificacao de Tipos
++-----------------------+
+     |
+     v
++--------------------+
+|  Etapa 4 - IR/TAC  |  Codigo de Tres Enderecos
++--------------------+
+     |
+     v
++---------------------+     +------------------+
+|  Etapa 5a - Assembly | --> | Codigo x86-64    |
++---------------------+     +------------------+
+     |
+     v
++---------------------+     +------------------+
+|  Etapa 5b - VM       | --> | Execucao Real    |
++---------------------+     +------------------+
 ```
 
 ---
 
 ## Etapas do Compilador
 
-### ✅ Etapa 1 — Análise Léxica (Scanner)
-**Status: Concluída**
+### Etapa 1 — Analise Lexica (Scanner)
+**Status: Concluida**
 
-Transforma o fluxo de caracteres em uma sequência de **tokens**.
+Transforma o fluxo de caracteres em uma sequencia de **tokens**.
 
-- Reconhece palavras reservadas, identificadores, literais (inteiros, booleanos, strings), operadores e delimitadores
-- Ignora espaços em branco e comentários de linha (`//`) e bloco (`/* */`)
-- Reporta erros léxicos com linha e coluna precisas, coletando todos antes de abortar
-- **Teoria aplicada:** Expressões Regulares e Autômatos Finitos Determinísticos (AFD)
+- Reconhece palavras reservadas, identificadores, literais, operadores e delimitadores
+- Ignora espacos em branco e comentarios `//` e `/* */`
+- Reporta erros lexicos com linha e coluna precisas
+- **Teoria aplicada:** Expressoes Regulares e Automatos Finitos Deterministicos (AFD)
 
 | Arquivo | Responsabilidade |
 |---|---|
 | `TokenType.java` | Enum com todos os tipos de token da linguagem |
-| `Token.java` | Value Object imutável: tipo + lexema + posição |
-| `Lexer.java` | Scanner — máquina de estados que produz a lista de tokens |
+| `Token.java` | Value Object imutavel: tipo + lexema + posicao |
+| `Lexer.java` | Scanner — maquina de estados que produz a lista de tokens |
 
 ---
 
-### ✅ Etapa 2 — Análise Sintática (Parser)
-**Status: Concluída**
+### Etapa 2 — Analise Sintatica (Parser)
+**Status: Concluida**
 
-Agrupa os tokens em estruturas gramaticais e constrói a **AST (Árvore de Sintaxe Abstrata)**.
+Agrupa os tokens em estruturas gramaticais e constroi a **AST**.
 
 - Parser Descendente Recursivo
-- Hierarquia de chamadas garante a **precedência correta** de operadores (`*` antes de `+`, etc.)
-- Erros sintáticos com linha e coluna exatas
-- **Teoria aplicada:** Gramáticas Livres de Contexto (GLC)
+- Hierarquia de chamadas garante a **precedencia correta** de operadores
+- Erros sintaticos com linha e coluna exatas
+- **Teoria aplicada:** Gramaticas Livres de Contexto (GLC)
+
+Gramatica implementada:
+
+```
+program    -> statement* EOF
+statement  -> varDecl | assign | ifStmt | whileStmt | print | read
+expression -> logicalOr
+logicalOr  -> logicalAnd  ('||' logicalAnd)*
+logicalAnd -> equality    ('&&' equality)*
+equality   -> relational  ('=='|'!=' relational)*
+relational -> additive    ('<'|'>'|'<='|'>=' additive)*
+additive   -> multip      ('+'|'-' multip)*
+multip     -> unary       ('*'|'/' unary)*
+unary      -> ('!'|'-') unary | primary
+primary    -> literal | identifier | '(' expression ')'
+```
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `Node.java` | Interface base de todos os nós da AST |
+| `Node.java` | Interface base de todos os nos da AST |
 | `NodeVisitor.java` | Visitor Pattern — usado em todas as fases seguintes |
-| `stmt/` (7 classes) | Nós de instrução: `ProgramNode`, `BlockStmt`, `VarDeclStmt`, `AssignStmt`, `IfStmt`, `WhileStmt`, `PrintStmt`, `ReadStmt` |
-| `expr/` (6 classes) | Nós de expressão: `BinaryExpr`, `UnaryExpr`, `IdentifierExpr`, `IntLiteralExpr`, `BoolLiteralExpr`, `StringLiteralExpr` |
+| `stmt/` (7 classes) | `ProgramNode`, `BlockStmt`, `VarDeclStmt`, `AssignStmt`, `IfStmt`, `WhileStmt`, `PrintStmt`, `ReadStmt` |
+| `expr/` (6 classes) | `BinaryExpr`, `UnaryExpr`, `IdentifierExpr`, `IntLiteralExpr`, `BoolLiteralExpr`, `StringLiteralExpr` |
 | `Parser.java` | Parser descendente recursivo |
-| `AstPrinter.java` | Visitor de debug — imprime a AST como árvore indentada |
-| `ParseException.java` | Exceção de erro sintático |
+| `AstPrinter.java` | Visitor de debug — imprime a AST como arvore indentada |
+| `ParseException.java` | Excecao de erro sintatico |
 
 ---
 
-### ✅ Etapa 3 — Análise Semântica
-**Status: Concluída**
+### Etapa 3 — Analise Semantica
+**Status: Concluida**
 
-Garante que o programa faça **sentido logicamente**, além de ser sintaticamente correto.
+Garante que o programa faca **sentido logicamente**.
 
-- **Tabela de Símbolos** com pilha de escopos — cada bloco `{ }` cria e destrói seu próprio escopo
-- **Verificação de tipos** em declarações, atribuições e expressões
-- **Teoria aplicada:** Gramáticas com Atributos e Esquemas de Tradução
+- Tabela de Simbolos com pilha de escopos (cada `{ }` cria e destroi seu escopo)
+- Verificacao de tipos em declaracoes, atribuicoes e expressoes
+- **Teoria aplicada:** Gramaticas com Atributos
 
 Erros detectados:
 
 | Erro | Exemplo |
 |---|---|
-| Variável não declarada | `print(y)` sem declarar `y` |
-| Variável declarada duas vezes | `int x = 1; int x = 2;` |
-| Tipo incompatível na declaração | `int x = true;` |
-| Tipo incompatível na atribuição | `x = false;` sendo `x` um `int` |
-| Operação aritmética com bool | `b + 1` sendo `b` um `bool` |
-| Condição não booleana | `if (42) { ... }` |
-| Variável usada fora do escopo | declarar `y` dentro do `if` e usar fora |
+| Variavel nao declarada | `print(y)` sem declarar `y` |
+| Variavel declarada duas vezes | `int x = 1; int x = 2;` |
+| Tipo incompativel na declaracao | `int x = true;` |
+| Tipo incompativel na atribuicao | `x = false;` sendo `x` um `int` |
+| Operacao aritmetica com bool | `b + 1` sendo `b` um `bool` |
+| Condicao nao booleana | `if (42) { ... }` |
+| Variavel usada fora do escopo | declarar `y` no `if` e usar fora |
 
 | Arquivo | Responsabilidade |
 |---|---|
 | `DataType.java` | Enum `INT`, `BOOL`, `STRING`, `VOID` |
-| `Symbol.java` | Entrada da tabela: nome + tipo + linha de declaração |
+| `Symbol.java` | Entrada da tabela: nome + tipo + linha de declaracao |
 | `SymbolTable.java` | Pilha de escopos com `pushScope()` / `popScope()` |
-| `SemanticAnalyzer.java` | Visitor que percorre a AST e valida tipos e escopos |
-| `SemanticException.java` | Exceção de erro semântico com posição |
+| `SemanticAnalyzer.java` | Visitor que valida tipos e escopos na AST |
+| `SemanticException.java` | Excecao de erro semantico com posicao |
 
 ---
 
-### ⏳ Etapa 4 — Geração de Código Intermediário
-**Status: Pendente**
+### Etapa 4 — Geracao de Codigo Intermediario (IR/TAC)
+**Status: Concluida**
 
-Traduz a AST para uma representação independente de máquina.
+Traduz a AST para **Codigo de Tres Enderecos (TAC)** — representacao linear, independente de maquina.
 
-- Código de Três Endereços (TAC)
-- Variáveis temporárias (`t0`, `t1`, …) e labels de desvio
-- **Teoria aplicada:** Esquemas de Tradução Dirigida pela Sintaxe (SDT)
+Instrucoes geradas:
+
+| Instrucao | Exemplo | Descricao |
+|---|---|---|
+| Copia | `x = 42` | Atribuicao simples |
+| Binaria | `t0 = x + y` | Operacao com dois operandos |
+| Unaria | `t1 = !ativo` | Negacao logica ou aritmetica |
+| Desvio condicional | `ifFalse t0 goto L1` | Sai do bloco se falso |
+| Desvio incondicional | `goto L0` | Volta ao topo do while |
+| Label | `L0:` | Marcador de posicao |
+| Print / Read | `print soma` / `read n` | Entrada e saida |
+
+Exemplo — `while (i <= 5) { soma = soma + i; }`:
+
+```
+L0:
+    t0 = i <= 5
+    ifFalse t0 goto L1
+    t1 = soma + i
+    soma = t1
+    goto L0
+L1:
+```
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `TacInstruction.java` | Representa uma instrucao TAC com tipo e operandos |
+| `IrProgram.java` | Lista ordenada de instrucoes — resultado da etapa |
+| `IrGenerator.java` | Visitor que percorre a AST e emite as instrucoes TAC |
 
 ---
 
-### ⏳ Etapa 5 — Geração de Código Final
-**Status: Pendente**
+### Etapa 5 — Geracao de Codigo Final
+**Status: Concluida**
 
-Traduz o código intermediário para linguagem de baixo nível.
+Dois sub-modulos independentes foram implementados:
 
-- Assembly x86 ou Bytecode para máquina virtual
-- Otimizações (bônus): eliminação de código morto, simplificação de expressões
+#### 5a — Assembly x86-64 (AT&T syntax)
+
+Traduz o TAC para Assembly x86-64, pronto para ser montado com `gcc`:
+
+```asm
+.section .data
+fmt_int: .string "%ld\n"
+
+.section .text
+.global main
+main:
+    pushq %rbp
+    movq  %rsp, %rbp
+    subq  $48, %rsp
+
+    # soma = 0
+    movq  $0, %rax
+    movq  %rax, -8(%rbp)
+
+    # i = 1
+    movq  $1, %rax
+    movq  %rax, -16(%rbp)
+L0:
+    # t0 = i <= 10
+    movq  -16(%rbp), %rax
+    movq  %rax, %rbx
+    movq  $10, %rax
+    cmpq  %rax, %rbx
+    setle %al
+    movzbq %al, %rax
+    movq  %rax, -24(%rbp)
+
+    # ifFalse t0 goto L1
+    movq  -24(%rbp), %rax
+    cmpq  $0, %rax
+    je    L1
+    ...
+```
+
+#### 5b — Maquina Virtual (VM)
+
+Interpreta o TAC diretamente em Java, permitindo executar e ver o resultado sem precisar de um montador externo.
+
+- Memoria: mapa de nome -> valor (substitui pilha e registradores)
+- Program Counter: percorre as instrucoes em ordem
+- Suporte a saltos, lacos, operacoes aritmeticas/logicas e E/S
+- Protecao contra loop infinito (limite de 100.000 instrucoes)
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `AssemblyGenerator.java` | Traduz TAC para Assembly x86-64 AT&T |
+| `VirtualMachine.java` | Interpreta e executa o TAC diretamente |
 
 ---
 
 ## Como Executar
 
-### Pré-requisitos
+### Pre-requisitos
 
-- Java 17 ou superior ([download](https://adoptium.net/))
+- Java 17 ou superior
 - IDE recomendada: Eclipse ou IntelliJ IDEA
 
 ### Compilar pelo terminal
 
 ```bash
-# Na raiz do projeto
 mkdir -p out
 find src -name "*.java" | xargs javac -d out
-```
-
-### Executar os testes
-
-```bash
 java -cp out compiler.Main
 ```
 
 ### Importar no Eclipse
 
 1. Extraia o `.zip` do projeto
-2. `File → New → Java Project` → dê o nome `compilador`
-3. Botão direito no projeto → `Build Path → Configure Build Path`
-4. Aba **Source** → adicione a pasta `src` extraída
-5. Clique com botão direito em `Main.java` → `Run As → Java Application`
+2. `File -> New -> Java Project` -> nome `compilador`
+3. Botao direito no projeto -> `Build Path -> Configure Build Path`
+4. Aba **Source** -> adicione a pasta `src` extraida
+5. Botao direito em `Main.java` -> `Run As -> Java Application`
 
 ---
 
-## Exemplos de Código-Fonte
+## Exemplos
 
-### Programa válido — soma de 1 a 10
+### Soma de 1 a 10 — saida completa do pipeline
 
+**Codigo-fonte:**
 ```
 int soma = 0;
 int i = 1;
@@ -234,24 +327,40 @@ while (i <= 10) {
 print(soma);
 ```
 
-### Programa com erro semântico
+**TAC gerado:**
+```
+    soma = 0
+    i = 1
+L0:
+    t0 = i <= 10
+    ifFalse t0 goto L1
+    t1 = soma + i
+    soma = t1
+    t2 = i + 1
+    i = t2
+    goto L0
+L1:
+    print soma
+```
+
+**Saida da VM:**
+```
+>>> 55
+```
+
+---
+
+### Erro semantico detectado
 
 ```
-int x = 10;
-if (x) {          // ERRO: condição deve ser bool, encontrado int
+int x = 5;
+if (x) {        // ERRO: condicao deve ser bool, encontrado int
     print("ok");
 }
 ```
 
-### Programa com escopo aninhado
-
 ```
-int x = 5;
-if (x > 0) {
-    int y = x + 1;  // y existe só dentro deste bloco
-    print(y);
-}
-print(y);           // ERRO: variável 'y' não foi declarada
+[ERRO] Erro semantico [linha 2]: condicao do 'if' deve ser do tipo 'bool', encontrado 'int'
 ```
 
 ---
@@ -262,58 +371,63 @@ print(y);           // ERRO: variável 'y' não foi declarada
 compiler/
 ├── src/
 │   └── compiler/
-│       ├── Main.java                    ← ponto de entrada e testes
+│       ├── Main.java                    <- ponto de entrada (pipeline completo)
 │       │
-│       ├── lexer/                       ← Etapa 1 ✅
+│       ├── lexer/                       <- Etapa 1
 │       │   ├── TokenType.java
 │       │   ├── Token.java
 │       │   └── Lexer.java
 │       │
-│       ├── ast/                         ← Etapa 2 ✅
+│       ├── ast/                         <- Etapa 2
 │       │   ├── Node.java
 │       │   ├── NodeVisitor.java
 │       │   ├── stmt/                    (7 classes)
 │       │   └── expr/                    (6 classes)
 │       │
-│       ├── parser/                      ← Etapa 2 ✅
+│       ├── parser/                      <- Etapa 2
 │       │   ├── Parser.java
 │       │   ├── AstPrinter.java
 │       │   └── ParseException.java
 │       │
-│       ├── semantic/                    ← Etapa 3 ✅
+│       ├── semantic/                    <- Etapa 3
 │       │   ├── DataType.java
 │       │   ├── Symbol.java
 │       │   ├── SymbolTable.java
 │       │   ├── SemanticAnalyzer.java
 │       │   └── SemanticException.java
 │       │
-│       ├── ir/                          ← Etapa 4 ⏳
+│       ├── ir/                          <- Etapa 4
+│       │   ├── TacInstruction.java
+│       │   ├── IrProgram.java
 │       │   └── IrGenerator.java
 │       │
-│       └── codegen/                     ← Etapa 5 ⏳
-│           └── CodeGenerator.java
+│       └── codegen/                     <- Etapa 5
+│           ├── AssemblyGenerator.java
+│           └── VirtualMachine.java
 │
-└── out/                                 ← bytecode compilado (gerado)
+
 ```
 
+**Total: 30 arquivos .java — 5 etapas completas**
+
 ---
 
-## Critérios de Avaliação
+## Criterios de Avaliacao
 
-| Critério | Peso | Status |
+| Criterio | Peso | Status |
 |---|---|---|
-| Corretude Léxica/Sintática | 30% | ✅ Concluído |
-| Análise Semântica | 20% | ✅ Concluído |
-| Geração de Código | 30% | ⏳ Pendente |
-| Documentação / Código | 20% | ✅ Aplicado desde o início |
+| Corretude Lexica/Sintatica | 30% | Concluido |
+| Analise Semantica | 20% | Concluido |
+| Geracao de Codigo | 30% | Concluido (TAC + Assembly + VM) |
+| Documentacao / Codigo | 20% | Concluido |
 
 ---
 
-## Boas Práticas Aplicadas
+## Boas Praticas Aplicadas
 
-- **Responsabilidade Única (SRP):** cada classe tem uma função bem definida
-- **Visitor Pattern:** `NodeVisitor<T>` desacopla as fases do compilador dos nós da AST — adicionar uma nova fase não exige modificar nenhum nó existente
-- **Imutabilidade:** `Token` e `Symbol` são Value Objects — sem setters, sem estado mutável
-- **Coleta de erros:** o lexer acumula todos os erros antes de abortar; o semântico reporta o erro com linha e contexto claros
-- **Comentários de intenção:** explicam o *porquê* das decisões, não apenas o *o quê*
-- **Nomenclatura descritiva:** métodos e variáveis com nomes que explicam seu papel
+- **Responsabilidade Unica (SRP):** cada classe tem uma funcao bem definida
+- **Visitor Pattern:** `NodeVisitor<T>` desacopla as fases do compilador dos nos da AST — adicionar uma nova fase nao exige modificar nenhum no existente
+- **Imutabilidade:** `Token` e `Symbol` sao Value Objects sem estado mutavel
+- **Coleta de erros:** cada fase reporta erros com linha, coluna e contexto claros
+- **Comentarios de intencao:** explicam o *porque* das decisoes, nao apenas o *o que*
+- **Nomenclatura descritiva:** metodos e variaveis com nomes que explicam seu papel
